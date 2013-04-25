@@ -29,6 +29,7 @@ import android.os.Environment;
 import android.os.Message;
 import android.os.Messenger;
 import android.util.Log;
+import android.widget.Toast;
 
 
 public class AsyncService extends IntentService {
@@ -160,6 +161,16 @@ public class AsyncService extends IntentService {
 				db = new MySQLiteHelper(getApplicationContext());
 				Event e = db.get_event_by_id(event_id, getApplicationContext());
 				db.add_subscribers(e.getName(),subArrayList,getApplicationContext());
+				e = db.get_event(e.getName(), getApplicationContext());
+				if(e!=null)
+				{
+					Toast.makeText(getApplicationContext(),
+			            "Subscriber List =" + e.getSubcribers(), Toast.LENGTH_LONG)
+			            .show();
+				}
+				else
+					Log.d("ASYNC TASK--", "EVENT NOT FOUND");
+				
 				//>>>>>>>>>Parsing of json sub list
 				//Get the Subscriber List
 //				String subscriberList = new String((String) tmp.get("subscriber_list"));

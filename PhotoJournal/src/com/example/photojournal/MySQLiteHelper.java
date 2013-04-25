@@ -75,8 +75,14 @@ public class MySQLiteHelper extends SQLiteOpenHelper implements Serializable {
 		initialValues.put(COLUMN_NAME, e.getName());
 		initialValues.put(COLUMN_TIME_STAMP, e.getTime_stamp());
 		initialValues.put(COLUMN_PUBLISHER, e.getPublisher());
-
-		initialValues.put(COLUMN_SUBSCRIBERS,e.getName());
+		ArrayList<String> list = e.getSubcribers();
+		if(list == null)
+		{
+			list = new ArrayList<String>();
+			list.add(e.getName());
+		}
+		String str = convertArrayListToString(list);
+		initialValues.put(COLUMN_SUBSCRIBERS,str);
 		db.insert(TABLE_EVENT, null, initialValues);
 		db.close();
 		return;
@@ -86,7 +92,14 @@ public class MySQLiteHelper extends SQLiteOpenHelper implements Serializable {
 		SQLiteDatabase db = getInstance(context).getReadableDatabase();
 		Cursor cursor = db.query(TABLE_EVENT, allColumns,
 				COLUMN_NAME + "=?", new String[] {event_name}, null, null, null, null);
-		cursor.moveToFirst();
+		//cursor.moveToFirst();
+		
+		if(!cursor.moveToFirst())
+		{
+			db.close();
+			return null;
+		}
+		
 		Event e = new Event(cursor.getString(1),cursor.getLong(3),cursor.getString(2),
 				cursor.getInt(4),convertStringToArrayList(cursor.getString(5)));	 
 		db.close();
@@ -98,7 +111,12 @@ public class MySQLiteHelper extends SQLiteOpenHelper implements Serializable {
 		SQLiteDatabase db = getInstance(context).getReadableDatabase();
 		Cursor cursor = db.query(TABLE_EVENT, allColumns,
 				COLUMN_EVENT_ID + "=?", new String[] {String.valueOf(event_id)}, null, null, null , null);
-		cursor.moveToFirst();
+		
+		if(!cursor.moveToFirst())
+		{
+			db.close();
+			return null;
+		}
 		Event e = new Event(cursor.getString(1),cursor.getLong(3),cursor.getString(2),
 				cursor.getInt(4),convertStringToArrayList(cursor.getString(5)));	 
 	    db.close();
@@ -125,6 +143,8 @@ public class MySQLiteHelper extends SQLiteOpenHelper implements Serializable {
 	}
 
 	public void add_subscribers(String event_name,ArrayList<String> entry,Context context) {
+		int row = get_row(event_name, context);
+		
 		Event e = get_event(event_name, context);
 		SQLiteDatabase db = getInstance(context).getWritableDatabase();
 		ContentValues initialValues = new ContentValues();
@@ -135,7 +155,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper implements Serializable {
 		String new_list = convertArrayListToString(entry);
 		initialValues.put(COLUMN_SUBSCRIBERS,new_list);
 		
-		int row = get_row(event_name, context);
+		
 		db.delete(TABLE_EVENT, COLUMN_NO + "=" + row, null);
 		db.insert(TABLE_EVENT, null, initialValues);
 		db.close();
@@ -175,7 +195,7 @@ public class MySQLiteHelper extends SQLiteOpenHelper implements Serializable {
 		Cursor cursor = db.query(TABLE_EVENT, allColumns,
 				COLUMN_NAME + "=?", new String[] {name}, null, null, null, null);
 		cursor.moveToFirst();
-		//db.close();
+		db.close();
 		return (int)cursor.getInt(0);
 
 	}
