@@ -48,6 +48,12 @@ public class AsyncService extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		Bundle b1 = new Bundle(intent.getExtras());
+		try {
+			serverListen = new ServerSocket(4321);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		while(true){
 			//Initialize streams
 			PrintWriter pw = null;
@@ -56,8 +62,10 @@ public class AsyncService extends IntentService {
 			 * All Asynchronous Tasks are Handled here
 			 */
 			try {
-				serverListen = new ServerSocket(4321);
+				Log.d("ASYNC TASK", "Waiting for Connection");
+				
 				clientSocket  = serverListen.accept();
+				Log.d("ASYNC TASK", "Conected to Someone");
 				Log.d("DEBUG_FRIEND", "Connected to Friend");
 				bw = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			} catch (IOException e) {
@@ -128,10 +136,12 @@ public class AsyncService extends IntentService {
 					bw.close();
 					clientSocket.close();
 					serverListen.close();
+					//serverListen.
 				}
 				catch(Exception e){
 					e.printStackTrace();
 				}
+				
 			}
 			
 			/**
@@ -147,7 +157,7 @@ public class AsyncService extends IntentService {
 				
 				try{
 					clientSocket.close();
-					serverListen.close();
+					//serverListen.close();
 				}
 				catch(Exception e){
 					e.printStackTrace();
@@ -162,6 +172,7 @@ public class AsyncService extends IntentService {
 				Event e = db.get_event_by_id(event_id, getApplicationContext());
 				db.add_subscribers(e.getName(),subArrayList,getApplicationContext());
 				e = db.get_event(e.getName(), getApplicationContext());
+				Log.d("ASYNC TASK", "TRYING TO TOAST");
 				if(e!=null)
 				{
 					Toast.makeText(getApplicationContext(),
