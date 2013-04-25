@@ -85,7 +85,7 @@ public class AsyncService extends IntentService {
 			 * 1. Join Event Reqeuest received
 			 */
 			if((tmp.get("request")).equals("join_event")){
-				
+				Log.d("Request in Async", "Join Event");
 				// 1. Create event_id folder in SD card
 				//Get the event id and check if not zero
 				Long event_id = new Long((Long)tmp.get("event_id"));
@@ -139,7 +139,7 @@ public class AsyncService extends IntentService {
 			else if((tmp.get("request")).equals("subscriber_list")){
 				//Retrieve ID
 				Long event_id = new Long((Long)tmp.get("event_id"));
-				
+				Log.d("ASYNC TASK - MULTICAST RECEIVED","Event ID" + event_id );
 				//>>>>>>>>>Parsing of json sub list
 				JSONObject subList = new JSONObject((JSONObject) tmp.get("subscriber_list"));
 				Log.d("ASYNC SERVICE SUB LIST", subList.toString());
