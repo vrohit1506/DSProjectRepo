@@ -1,0 +1,35 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".PhotoEventActivity" >
+
+    <ImageView
+        android:id="@+id/photoView"
+        android:layout_width="match_parent"
+        android:layout_height="300px"
+        android:src="@drawable/ic_launcher" />
+
+    <EditText
+        android:id="@+id/addTagline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/addTaglineButton"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/photoView"
+        android:layout_toLeftOf="@+id/addTaglineButton"
+        android:hint="@string/addTagline" >
+
+    </EditText>
+
+    <ImageButton
+        android:id="@+id/addTaglineButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/addTagline"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/photoView"
+        android:src="@android:drawable/ic_input_add" 
+		android:onClick="onClickTagline"/>
+
+</RelativeLayout>

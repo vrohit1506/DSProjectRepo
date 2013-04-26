@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">PhotoJournal</string>
+    <string name="register">Register</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_home">Home</string>
+    <string name="title_activity_create_event">CreateEvent</string>
+    <string name="title_activity_create_new_event">CreateNewEvent</string>
+    <string name="title_activity_sign_up">SignUpActivity</string>
+    <string name="prompt_name">Name</string>
+    <string name="confirm_password">Re-enter Password</string>
+    <string name="action_sign_up_register">Register</string>
+    <string name="prompt_user">Username</string>
+    <string name="ltext">Your Events</string>
+    <string name="Null">null</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_my_event">MyEventActivity</string>
+    <string name="my_event_add_photo">Add Photo</string>
+    <string name="Null1"></string>
+    <string name="title_activity_photo_event">PhotoEventActivity</string>
+    <string name="addComment">Add Comment</string>
+    <string name="addTagline">Enter Tagline</string>
+    <string name="image">image</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="title_activity_my_mini_event">MyMiniEvent</string>
+    <string name="title_activity_add_coment">AddComentActivity</string>
+    <string name="title_activity_add_comment">AddCommentActivity</string>
+    <string name="Null4"/>
+    <string name="add_friends">Add Friend</string>
+
+</resources>
