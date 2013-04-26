@@ -284,7 +284,7 @@ public class SignUpActivity extends Activity {
 //				 myIP = InetAddress.getByName(hostName);
 //				 Log.d("DEBUG_MY_IP", myIP.toString());
 //				 req.put("ip", myIP.toString());
-				 ip = new String("128.237.240.118");	 
+				 ip = new String("128.237.234.206");	 
 				 port = 1234;
 				 Log.d("ClientActivity", "C: Connecting...");
 				 client = new Socket(ip, port);

@@ -244,7 +244,7 @@ public class LoginActivity extends Activity {
 			
 		
 			try {
-				 ip = new String("128.237.240.118");	 
+				 ip = new String("128.237.234.206");	 
 				 port = 1234;
 				 Log.d("ClientActivity", "C: Connecting...");
 				 client = new Socket(ip, port);

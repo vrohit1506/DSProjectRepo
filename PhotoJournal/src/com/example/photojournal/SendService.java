@@ -5,24 +5,22 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.json.simple.*;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.IntentService;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
@@ -218,7 +216,7 @@ public class SendService extends IntentService {
 			Log.d("FILE PATH", filename);
 
 			//INITIAL REQUEST TO OBTAIN TIME STAMP BEFORE SENDING IMAGE
-			send.put("request", "get_time_stamp");
+			send.put("request", "get_photo_id");
 			send.put("event_id", ((Event) b1.getSerializable("event")).getEvent_id());
 
 			//Set up the File Input streams
@@ -248,7 +246,6 @@ public class SendService extends IntentService {
 			JSONObject tmp = new JSONObject();
 			time_stamp = new Long(0);
 			//TODO: IS THE TIME STAMP SENT A STRING OR INTEGER??
-			do{
 				try {
 
 					reply = new String((String) breader.readLine());
@@ -256,7 +253,8 @@ public class SendService extends IntentService {
 					String string_time_stamp = new String(tmp.get("response").toString());
 					//((Double) tmp.get("response")).longValue();
 					time_stamp = (new Double((Double.parseDouble(string_time_stamp)))).longValue();
-
+					client.close();
+					
 				} catch (IOException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -264,17 +262,7 @@ public class SendService extends IntentService {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}while(time_stamp < 0);
-
-			//CLOSING CONNECTION
-			try {
-				client.close();
-			} catch (IOException e3) {
-				// TODO Auto-generated catch block
-				e3.printStackTrace();
-			}
-			//INCEREMENT TIME STAMP
-			time_stamp = time_stamp+1;
+				time_stamp = time_stamp+1;
 
 			//PUT TIME STAMP IN DATABSE
 
@@ -332,92 +320,30 @@ public class SendService extends IntentService {
 			/**
 			 * CONNECTION 2
 			 */
-
-			try {
+			
+			try{
+				long photo_id = time_stamp;
+				Event e_New = db.get_event_by_id(((Event) b1.getSerializable("event")).getEvent_id() , getApplicationContext());
+				ArrayList<String> list = e_New.getSubcribers(); 
 				client = new Socket(ip,port);
-				pwriter = new PrintWriter(client.getOutputStream());
-				breader = new BufferedReader(new InputStreamReader(client.getInputStream()));
-			} catch (UnknownHostException e1) {
+				Request_Async.send_image(filename, client,photo_id , 1 , (int)e_New.getEvent_id(), b1.getString("tagline"));
+				/*
+				if(list != null)
+				{
+				for(int i = 0; i<list.size();i++)
+				{
+					String sub = list.get(i);
+					Log.d("SUBSCRIBER",sub);
+				}
+				}*/
+			}
+			catch (UnknownHostException e1) {
 
 				e1.printStackTrace();
 			} catch (IOException e1) {
-
-				e1.printStackTrace();
-			}
-			send.clear();
-			send.put("request", "add_image");
-			send.put("event_id", ((Event) b1.getSerializable("event")).getEvent_id());
-			send.put("time_stamp", new Long(time_stamp).toString());
-			send.put("tag_line", b1.getString("tagline"));
-
-
-			//SEND THE FILE
-			File file = new File(filename);
-			try {
-				fstream = new FileInputStream(filename);
-				bstream = new BufferedInputStream(fstream);
-			} catch (FileNotFoundException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-
-			//Size of file
-			byte[] filearray = new byte[(int)file.length() + 1];
-			Log.d("XXXXXXXX DEBUG_SIZE LONG XXXXXXX", (new Long(file.length())).toString());
-			Log.d("XXXXXXXX DEBUG_SIZE INTEGER XXXXXXX", (new Integer((int)file.length())).toString());
-			try{
-				//Read File
-				bstream.read(filearray, 0, filearray.length);
-
-				//Send File Size
-				send.put("size",  filearray.length);
-				//Log.d("DEBUG_SIZE", (new Long(filearray.length)).toString());;
-				pwriter.write(send.toString());
-				pwriter.flush();
-
-
-				//ACCEPT A YES
-				//do{
-				try {
-
-					reply = new String((String) breader.readLine());
-					//							continue;
-
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				//}while(!reply.equals("Yes"));
-
-				//IF(YES)
-				//Send the file 
-				OutputStream os = client.getOutputStream();
-
-				//SEND IMAGE
-				Log.d("HEY BUNDLE","HEY BUNDLE");
-
-				os.write(filearray, 0, filearray.length);
-				os.flush();
-
-				//WAIT FOR A YES
-				try {
-					reply = new String((String) breader.readLine());
-
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-
-				//Close the stream realated objects
-				bstream.close();
-				pwriter.flush();
-				pwriter.close();
-				client.close();
-			}
-			catch(Exception e1){
-				e1.printStackTrace();
-			}
-			Log.d("DEBUG_ECE", "IAM HERE JUST BELOW MESSENGER");
 			//Communicate back to the main activity the results
 			//Bundle extras = intent.getExtras();
 			result = Activity.RESULT_OK;
@@ -435,8 +361,7 @@ public class SendService extends IntentService {
 				} catch (android.os.RemoteException e1) {
 					Log.w(getClass().getName(), "Exception sending message", e1);
 				}
-
-			}
+		}
 		}
 
 
@@ -445,28 +370,13 @@ public class SendService extends IntentService {
 			//CONNECT TO SERVER
 			try {
 				client = new Socket(ip,port);
-			} catch (UnknownHostException e) {
-
-				e.printStackTrace();
-			} catch (IOException e) {
-
-				e.printStackTrace();
-			}
-
-			//CREATING A JSON OBJECT
-			long local_Event_Id = (new Long((((Event) b1.getSerializable("event")).getEvent_id())));
-			send = new JSONObject();
-			send.put("request", request);
-			send.put("event_id", (new Long((((Event) b1.getSerializable("event")).getEvent_id()))).toString());
-			send.put("time_stamp", b1.getInt("folder_number"));
-			send.put("comment", (String)b1.getString("comment"));
-			Log.d("DEBUG FOLDER NUMBER IN SERVICE", ((Integer)(b1.getInt("folder_number"))).toString());
-			Log.d("DEBUG EVENT ID IN SERVICE", (new Long((((Event) b1.getSerializable("event")).getEvent_id()))).toString());
-			//Log.d("COMMENT SERVICE", );
-			int folder_number = b1.getInt("folder_number");
+				String comment = (String)b1.getString("comment");
+				long event_id = ((Event) b1.getSerializable("event")).getEvent_id();
+				int folder_number = b1.getInt("folder_number");
+				Request_Async.send_comment(event_id, 1, folder_number, comment,client);
 
 			//OBTAIN THE FILE NAME
-			File folder = new File(Environment.getExternalStorageDirectory() + "/" +  local_Event_Id + "/" + folder_number);
+			File folder = new File(Environment.getExternalStorageDirectory() + "/" +  event_id + "/" + String.valueOf(folder_number));
 			Log.d("DEBUG", folder.getAbsolutePath());
 			File[] listOfFiles = folder.listFiles();
 			Integer countFiles = new Integer(listOfFiles.length);
@@ -491,56 +401,13 @@ public class SendService extends IntentService {
 				// TODO Auto-generated catch block
 				e3.printStackTrace();
 			}
+			} catch (UnknownHostException e) {
 
-			/**
-			 * Sending Initial comment packet
-			 */
-			//Set up the File Input streams
-			PrintWriter pwriter = null;
-			FileInputStream fstream = null;
-			BufferedInputStream bstream = null;
-			BufferedReader breader = null;
-			BufferedWriter bufwriter = null;
+				e.printStackTrace();
+			} catch (IOException e) {
 
-			try{
-				//Initialize the streams
-				pwriter = new PrintWriter(client.getOutputStream());
-				breader = new BufferedReader(new InputStreamReader(client.getInputStream()));
-
-			}
-			catch(Exception e){
 				e.printStackTrace();
 			}
-
-			//SEND THE INITIAL REQUEST WITH COMMENT
-			Log.d("XXXXXXXXXXX", send.toString());
-			pwriter.write(send.toString());
-			pwriter.flush();
-
-
-			//WAIT FOR YES
-			//do{
-			try {
-
-				reply = new String((String) breader.readLine()); 
-
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			//}while(!reply.equals("Yes"));
-			Log.d("IN SERVICE COMMENT", "Received a yes");
-			try{
-				client.close();
-				pwriter.close();
-				fstream.close();
-				breader.close();
-				bufwriter.close();
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
-
 			//Communicate back to the main activity the results
 			//			Bundle extras = intent.getExtras();
 			result = Activity.RESULT_OK;
