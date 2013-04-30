@@ -1,7 +1,13 @@
 package com.example.photojournal;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Scanner;
+
+import android.os.Environment;
+import android.util.Log;
 
 public class Event implements Serializable {
 
@@ -64,6 +70,22 @@ public class Event implements Serializable {
 	
 	public ArrayList<String> getSubcribers() {
 		return subscribers;
+	}
+	
+	public static Long getTimeStampFromLog(Long event_id) throws FileNotFoundException{
+		Long actual_time_stamp = new Long(0);
+		Long countLines = new Long(0);
+		File fileComment = new File(Environment.getExternalStorageDirectory() + "/" + event_id + "/" + "log.txt");
+		Scanner lineCountHelper = new Scanner(fileComment);
+		while(lineCountHelper.hasNextLine()){
+			countLines++;
+			lineCountHelper.nextLine();
+		}
+		//TODO: Whether I need to divde lineCount by 2. Check the actual log file structure
+		Log.d("NUMBER OF LINES IN COMMENT FILE", countLines.toString());
+		actual_time_stamp = countLines;
+		lineCountHelper.close();
+		return actual_time_stamp;
 	}
 }
 

@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -171,6 +173,16 @@ public class SendService extends IntentService {
 				}
 			}
 
+			//***** log.txt is created here *******
+			File logText = new File(Environment.getExternalStorageDirectory() + "/" + event_id.toString() + "/" + "log.txt");
+			try {
+				logText.createNewFile();
+				client.close();
+			} catch (IOException e) {
+
+				e.printStackTrace();
+			}
+
 			//Communicate back to the main activity the results
 			Bundle extras = intent.getExtras();
 			if (extras != null) {
@@ -245,24 +257,24 @@ public class SendService extends IntentService {
 			JSONParser parser = new JSONParser();
 			JSONObject tmp = new JSONObject();
 			time_stamp = new Long(0);
-			//TODO: IS THE TIME STAMP SENT A STRING OR INTEGER??
-				try {
 
-					reply = new String((String) breader.readLine());
-					tmp = (JSONObject) parser.parse(reply);
-					String string_time_stamp = new String(tmp.get("response").toString());
-					//((Double) tmp.get("response")).longValue();
-					time_stamp = (new Double((Double.parseDouble(string_time_stamp)))).longValue();
-					client.close();
-					
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				time_stamp = time_stamp+1;
+			try {
+
+				reply = new String((String) breader.readLine());
+				tmp = (JSONObject) parser.parse(reply);
+				String string_time_stamp = new String(tmp.get("response").toString());
+				//((Double) tmp.get("response")).longValue();
+				time_stamp = (new Double((Double.parseDouble(string_time_stamp)))).longValue();
+				client.close();
+
+			} catch (IOException e1) {
+
+				e1.printStackTrace();
+			} catch (ParseException e) {
+
+				e.printStackTrace();
+			}
+			time_stamp = time_stamp+1;
 
 			//PUT TIME STAMP IN DATABSE
 
@@ -280,6 +292,13 @@ public class SendService extends IntentService {
 					//directory is created;
 				}
 			}
+
+			//			try {
+			//				logText.createNewFile();
+			//			} catch (IOException eLog) {
+			//				
+			//				eLog.printStackTrace();
+			//			}
 
 			//STORE THE IMAGE SENT IN THE APPROPRIATE DIRECTORY
 			File fileImage = new File(Environment.getExternalStorageDirectory() + "/" + ((Event) b1.getSerializable("event")).getEvent_id() + "/" + time_stamp  + "/1.jpg");
@@ -306,21 +325,43 @@ public class SendService extends IntentService {
 
 
 			try{
-				//TODO: Have to generalize TAG LINE
+
 				PrintWriter writeImage = new PrintWriter(fileTagLine);
-				writeImage.write(b1.getString("tagline"));
+				writeImage.write(b1.getString("tagline")+"\n");
 				fstream.close();
 				bstream.close();
 				writeImage.close();
 			} catch ( IOException e1 ) {
 				e1.printStackTrace();
 			}
+			//***Write the Image and Tagline into the log file
+			//**** Try to create or refer the log file *******
+			String imagePath = new String(Environment.getExternalStorageDirectory() + "/" + ((Event) b1.getSerializable("event")).getEvent_id() + "/" + "log.txt");
+			File logText = new File(Environment.getExternalStorageDirectory() + "/" + ((Event) b1.getSerializable("event")).getEvent_id() + "/" + "log.txt");
+			PrintWriter writeLog;
+			try {
+				writeLog = new PrintWriter(new BufferedWriter(new FileWriter(imagePath , true)));
+				Long photo_id = time_stamp;
+				writeLog.println("add_image " + photo_id.toString());
+				writeLog.flush();
+				writeLog.close();
+				//writeLog.write("")
+
+			} catch (FileNotFoundException e2) {
+
+				e2.printStackTrace();
+			} catch (IOException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+
+
 			response = new JSONObject();
 
 			/**
 			 * CONNECTION 2
 			 */
-			
+
 			try{
 				long photo_id = time_stamp;
 				Event e_New = db.get_event_by_id(((Event) b1.getSerializable("event")).getEvent_id() , getApplicationContext());
@@ -341,7 +382,7 @@ public class SendService extends IntentService {
 
 				e1.printStackTrace();
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
+
 				e1.printStackTrace();
 			}
 			//Communicate back to the main activity the results
@@ -361,13 +402,15 @@ public class SendService extends IntentService {
 				} catch (android.os.RemoteException e1) {
 					Log.w(getClass().getName(), "Exception sending message", e1);
 				}
-		}
+			}
 		}
 
 
 		else if(request.equals("add_comment")){
 			Log.d("IN SERVICE", "SENDING COMMENT");
 			//CONNECT TO SERVER
+			Integer countLines = new Integer(0);
+
 			try {
 				client = new Socket(ip,port);
 				String comment = (String)b1.getString("comment");
@@ -375,32 +418,80 @@ public class SendService extends IntentService {
 				int folder_number = b1.getInt("folder_number");
 				Request_Async.send_comment(event_id, 1, folder_number, comment,client);
 
-			//OBTAIN THE FILE NAME
-			File folder = new File(Environment.getExternalStorageDirectory() + "/" +  event_id + "/" + String.valueOf(folder_number));
-			Log.d("DEBUG", folder.getAbsolutePath());
-			File[] listOfFiles = folder.listFiles();
-			Integer countFiles = new Integer(listOfFiles.length);
-			Log.d("DEBUG FILE COUNT", countFiles.toString());
+				//OBTAIN THE FILE NAME
+				File folder = new File(Environment.getExternalStorageDirectory() + "/" +  event_id + "/" + String.valueOf(folder_number));
+				Log.d("DEBUG", folder.getAbsolutePath());
+				File[] listOfFiles = folder.listFiles();
+				Integer countFiles = new Integer(listOfFiles.length);
+				Log.d("DEBUG FILE COUNT", countFiles.toString());
 
-			//CREATE COMMENT FILE
-			//STORE THE IMAGE SENT IN THE APPROPRIATE DIRECTORY
-			String filePath = Environment.getExternalStorageDirectory() + "/" + ((Event) b1.getSerializable("event")).getEvent_id() + "/" + folder_number + "/" + countFiles  + ".txt";
-			File fileComment = new File(filePath);
-			try {
-				if(fileComment.createNewFile()){
-					PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(filePath , true)));
-					pw.println((String)b1.getString("comment"));
-					pw.close();
+				//CREATE COMMENT FILE
+				//STORE THE COMMENT SENT IN THE APPROPRIATE DIRECTORY
+				String filePath = Environment.getExternalStorageDirectory() + "/" + ((Event) b1.getSerializable("event")).getEvent_id() + "/" + folder_number + "/" + countFiles  + ".txt";
+				File fileComment = new File(filePath);
+
+				//**** Try to create or refer the log file *******
+				String logPath = Environment.getExternalStorageDirectory() + "/" + ((Event) b1.getSerializable("event")).getEvent_id() + "/" + "log.txt";
+				File logText = new File(logPath);
+				try {
+					logText.createNewFile();
+				} catch (IOException eLog) {
+
+					eLog.printStackTrace();
 				}
-				else{
-					PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(filePath, true)));
-					pw.println((String)b1.getString("comment"));
-					pw.close();
+
+				try {
+					if(fileComment.createNewFile()){
+						PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(filePath , true)));
+						pw.write((String)b1.getString("comment")+"\n");
+						Log.d("DEBUG FILE COUNT AFTER", "HERE IAM 1");
+						pw.close();
+						//>>>>
+						//Count number of lines in comments file
+						Scanner lineCountHelper = new Scanner(fileComment);
+						while(lineCountHelper.hasNextLine()){
+							countLines++;
+							lineCountHelper.nextLine();
+						}
+						Log.d("NUMBER OF LINES IN COMMENT FILE", countLines.toString());
+						lineCountHelper.close();
+						//>>>>>
+
+						Log.d("DEBUG FILE COUNT AFTER", "HERE IAM 2");
+					}
+					else{
+						Log.d("DEBUG FILE COUNT AFTER", "HERE IAM 3");
+						PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(filePath, true)));
+						pw.write((String)b1.getString("comment")+"\n");
+						pw.close();
+						//>>>>
+						//Count the number of lines in file
+						Scanner lineCountHelper = new Scanner(fileComment);
+						while(lineCountHelper.hasNextLine()){
+							countLines++;
+							lineCountHelper.nextLine();
+						}
+
+						Log.d("NUMBER OF LINES IN COMMENT FILE", countLines.toString());
+						lineCountHelper.close();
+						//>>>
+
+						Log.d("DEBUG FILE COUNT AFTER", "HERE IAM 4");
+					}
+				} catch (IOException e3) {
+
+					e3.printStackTrace();
 				}
-			} catch (IOException e3) {
-				// TODO Auto-generated catch block
-				e3.printStackTrace();
-			}
+
+				//****Get the number of lines in the comments file and just store it in log file
+				//Remove Tagline
+				//There is somehow a new line in 2.txt coming between every comment
+				//TODO: Check the file
+				//countLines/=2;
+				PrintWriter pwLogHelper = new PrintWriter(new BufferedWriter(new FileWriter(logPath , true)));
+				pwLogHelper.write("add_comment " + folder_number + "." + countLines + "\n");
+				pwLogHelper.flush();
+				pwLogHelper.close();
 			} catch (UnknownHostException e) {
 
 				e.printStackTrace();
@@ -408,6 +499,9 @@ public class SendService extends IntentService {
 
 				e.printStackTrace();
 			}
+
+
+			//fileComment
 			//Communicate back to the main activity the results
 			//			Bundle extras = intent.getExtras();
 			result = Activity.RESULT_OK;
@@ -529,7 +623,7 @@ public class SendService extends IntentService {
 					pwFriend.close();
 					bwFriend.close();
 
-					
+
 					friendClient.close();
 				}
 				catch(Exception e){
@@ -539,10 +633,106 @@ public class SendService extends IntentService {
 
 			//If response is No will have to do something later
 			else{
-				
+
 			}
-			
+
 			Log.d("EXIT ADD SUBSCRIBER", "Exited");
+		}
+
+		else if(request.equals("get_timeStamp")){
+			Log.d("SEND SERVICE", "GETTING TIME STAMP");
+			/*
+			 * max_timeStamp is the largest timeStamp
+			 */
+			Integer timeStamp = new Integer(0);
+			Event event = (Event) b1.getSerializable("EVENT_UPDATE");
+			TimeStampData ob = db.multicast_time_stamp(event.getEvent_id(), b1.getString("ip"), b1.getInt("port"), getApplicationContext(), b1.getString("username"));
+			File fileComment = new File( Environment.getExternalStorageDirectory() + "/" + event.getEvent_id() + "/" + "log.txt");  
+			try {
+				timeStamp = getCountNumberOfLines(fileComment);
+
+			} catch (FileNotFoundException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+
+			/**
+			 * Got the Max Time Stamp and details of the node
+			 * Step1: Check if Local TimeStamp < Received TimeStamp
+			 * Step2: if True then perform actual get_update else break
+			 * Step3: Get Update ==> JSONObject = {"request":"get_update","event_id":getID, "start_timeStamp":localTS+1,"end_timeStamp":maxTs};
+			 * Step4: Send t request to the ob ip,port and keep connectionion alive until u dnt receive a end_request
+			 * 
+			 */
+			Log.d("TESTING CODE PART..", "ENTERED");
+			//Declare network variables we will need
+			Socket friendUpdateSocket = null;
+			BufferedReader friendUpdateReader = null;
+			PrintWriter friendUpdateWriter = null;
+			JSONObject updatePacketSend = new JSONObject();
+			JSONObject updatePacketReceive = new JSONObject();
+			JSONParser updateParser = new JSONParser();
+			String updateReply = null;
+			Log.d("GET_TIME_STAMP",timeStamp.toString());
+			Log.d("GET OB.TIME_STAMP",ob.getTimeStamp().toString());
+			if(ob.getTimeStamp() > timeStamp){
+				while(true){
+					Log.d("UPDATING Loop...","Entered");
+					//Loop until u dnt receive end_of_transfer
+					try{
+						// Connect to the node you want update from
+						friendUpdateSocket = new Socket(ob.getIp(), ob.getPort());
+						friendUpdateReader = new BufferedReader(new InputStreamReader(friendUpdateSocket.getInputStream()));
+						friendUpdateWriter = new PrintWriter(friendUpdateSocket.getOutputStream());
+						//Create a request packet to the selected node
+						updatePacketSend.put("request", "get_update");
+						updatePacketSend.put("event_id", event.getEvent_id());
+						Long startTS = new Long((timeStamp + 1));
+						updatePacketSend.put("start_time_stamp", startTS);
+						updatePacketSend.put("end_time_stamp", ob.getTimeStamp());
+						Log.d("JSON OBJECT", updatePacketSend.toString());
+						friendUpdateWriter.write(updatePacketSend.toString());
+						friendUpdateWriter.write("\n");
+						friendUpdateWriter.flush();
+						//Read response
+						Log.d("Waiting for response...", "ReadLine");
+						reply = new String((String) friendUpdateReader.readLine());
+						updatePacketReceive = (JSONObject) updateParser.parse(reply);
+						if(updatePacketReceive.get("request").equals("add_image")){
+							friendUpdateWriter.close();
+							Request_Async.receive_photo(updatePacketReceive, friendUpdateSocket);
+						}
+						else if(updatePacketReceive.get("request").equals("add_comment")){
+							friendUpdateWriter.close();
+							Request_Async.receive_comment(updatePacketReceive, friendUpdateSocket);
+						}
+						else if(updatePacketReceive.get("request").equals("end_of_transfer")){
+							break;
+						} 
+					}
+					catch(Exception e){
+						e.printStackTrace();
+					}
+				}
+				try {
+					friendUpdateSocket.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			b1.putSerializable("object", ob);
+			//Communicate back to main HOME
+			Messenger messenger = (Messenger) b1.get("MESSENGER");
+			Message msg = Message.obtain();
+			msg.setData(b1);
+			try {
+				Log.d("IN SERVICE", "GOT TIME STAMP AND COMMUNICATION BACK TO HOME");
+				messenger.send(msg);
+			} catch (android.os.RemoteException e1) {
+				Log.w(getClass().getName(), "Exception sending message", e1);
+			}
+			//finish();
 		}
 		//Dummy Else>>>>>>>>>>>>>>>>
 		//		else{
@@ -560,7 +750,7 @@ public class SendService extends IntentService {
 		//			response = new JSONObject();
 		//			send.put("request", "new_event");
 		//			send.put("event_name", intent.getStringExtra("event_name"));
-		//			//TODO: Add a general form to set the username
+		//			//
 		//			send.put("publisher", "rohit");
 		//			PrintWriter pw = null;
 		//			BufferedReader bw = null;
@@ -603,7 +793,7 @@ public class SendService extends IntentService {
 		//			if(event_id != 0)
 		//				result = Activity.RESULT_OK;
 		//
-		//			//TODO: Create directory of the name u receive
+		//			//
 		//			
 		//			
 		//			
@@ -625,5 +815,21 @@ public class SendService extends IntentService {
 		//			
 		//		}//?>>>>>>>>>>>>>>>>>>>>>>>Dummy Else
 
+	}
+
+	public int getCountNumberOfLines(File fileComment) throws FileNotFoundException
+	{
+		Integer countLines = new Integer(0);
+		//>>>>
+		//Count number of lines in comments file
+		Scanner lineCountHelper = new Scanner(fileComment);
+		while(lineCountHelper.hasNextLine()){
+			countLines++;
+			lineCountHelper.nextLine();
+		}
+		Log.d("NUMBER OF LINES IN COMMENT FILE", countLines.toString());
+		lineCountHelper.close();
+		return countLines;
+		//>>>>>
 	}
 }

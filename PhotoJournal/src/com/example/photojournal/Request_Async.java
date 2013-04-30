@@ -43,7 +43,7 @@ public class Request_Async {
 		try
 		{
 			send = new JSONObject();
-			breader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+
 			pwriter = new PrintWriter(client.getOutputStream());
 
 			File file = new File(image_path);
@@ -51,7 +51,7 @@ public class Request_Async {
 
 			Log.d("SEND IMAGE",image_path);
 			Log.d("SEND IMAGE",String.valueOf(file.length()));
-			
+
 			send.clear();
 			send.put("request", "add_image");
 			send.put("event_id", event_id);
@@ -59,42 +59,101 @@ public class Request_Async {
 			send.put("photo_id",photo_id);
 			send.put("tag_line", tag_line);
 			send.put("size",  filearray.length);
-			
+
 			pwriter.write(send.toString());
+			pwriter.write('\n');
 			pwriter.flush();
 			
-			
-			//Log.d("Image Added Reply", reply);
-			//do
-			{
-				reply = new String((String) breader.readLine());
-				Log.d("SEND FILE reply",reply);
-			
-			}//while(!reply.equals("Yes"));
+			Log.d("Image Added Reply", "request sent waiting for reply");
+
+			breader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+			Log.d("SEND IMAGE","after initializing buffered reader");
+			reply = new String((String) breader.readLine());
+			Log.d("SEND FILE reply",reply);
 
 			fstream = new FileInputStream(image_path);
 			bstream = new BufferedInputStream(fstream);
-
 			bstream.read(filearray, 0, filearray.length);
-
+			
 			os = client.getOutputStream();
 			os.write(filearray, 0, filearray.length);
+			os.write('\n');
 			os.flush();
-
-			reply = new String((String) breader.readLine());
-
+		
+		//	Log.d("SEND IMAGE", "Sending image waiting for last yes");
+		//	reply = new String((String) breader.readLine());
+		//	Log.d("SEND IMAGE", "REceived yes");
+			
 			os.close();
 			bstream.close();
-			
-			pwriter.close();
+			fstream.close();
 			breader.close();
-			client.close();
+			pwriter.close();
+			//client.close();
 			Log.d("SEND FILE","returning");
 		}
 		catch(IOException e){
-			e.printStackTrace();	
+			Log.d("ERROR",e.toString());	
 		}
 	}
+
+//	public static void send_image(String image_path, Socket client, long photo_id, long time_stamp, int event_id, String tag_line) {
+//		try
+//		{
+//			send = new JSONObject();
+//			breader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+//			pwriter = new PrintWriter(client.getOutputStream());
+//
+//			File file = new File(image_path);
+//			byte[] filearray = new byte[(int)file.length() + 1];
+//
+//			Log.d("SEND IMAGE",image_path);
+//			Log.d("SEND IMAGE",String.valueOf(file.length()));
+//			
+//			send.clear();
+//			send.put("request", "add_image");
+//			send.put("event_id", event_id);
+//			send.put("time_stamp", time_stamp);
+//			send.put("photo_id",photo_id);
+//			send.put("tag_line", tag_line);
+//			send.put("size",  filearray.length);
+//			
+//			pwriter.write(send.toString());
+//			pwriter.write("\n");
+//			pwriter.flush();
+//			
+//			
+//			//Log.d("Image Added Reply", reply);
+//			//do
+//			{
+//				reply = new String((String) breader.readLine());
+//				Log.d("SEND FILE reply",reply);
+//			
+//			}//while(!reply.equals("Yes"));
+//
+//			fstream = new FileInputStream(image_path);
+//			bstream = new BufferedInputStream(fstream);
+//
+//			bstream.read(filearray, 0, filearray.length);
+//
+//			os = client.getOutputStream();
+//			os.write(filearray, 0, filearray.length);
+//			os.flush();
+//
+//			reply = new String((String) breader.readLine());
+//
+//			os.close();
+//			bstream.close();
+//			
+//			pwriter.close();
+//			breader.close();
+//			//client.close();
+//			Log.d("SEND FILE","returning");
+//		}
+//		catch(IOException e){
+//			e.printStackTrace();	
+//		}
+//	}
 
 	public static void send_comment(long event_id,long time_stamp,int photo_id,String comment,Socket client)
 	{
@@ -111,6 +170,7 @@ public class Request_Async {
 			send.put("photo_id",photo_id);
 
 			pwriter.write(send.toString());
+			pwriter.write("\n");
 			pwriter.flush();
 
 			reply = new String((String) breader.readLine());
@@ -140,6 +200,7 @@ public class Request_Async {
 			send.put("response", "Yes");
 			pwriter = new PrintWriter(client.getOutputStream());
 			pwriter.write(send.toString());
+			pwriter.write("\n");
 			pwriter.flush();
 			pwriter.close();
 		}

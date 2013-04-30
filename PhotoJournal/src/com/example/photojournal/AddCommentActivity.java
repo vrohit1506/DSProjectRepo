@@ -151,7 +151,7 @@ public class AddCommentActivity extends Activity {
 			//Get the event name
 			mAddCommentView = (EditText) findViewById(R.id.addComment);
 			mNewComment = mAddCommentView.getText().toString();
-			extras.putString("comment", "\n" + mNewComment);
+			extras.putString("comment", /*"\n"*/  mNewComment);
 			extras.putString("request", "add_comment");
 			Intent intent = new Intent(this, SendService.class);
 			intent.putExtras(extras);
