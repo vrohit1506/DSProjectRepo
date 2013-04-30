@@ -1,0 +1,42 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".DialogActivity" >
+
+    <TextView
+        android:id="@+id/dialog_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="14dp"
+        android:text="this person wants to add you to this event:"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <Button
+        android:id="@+id/dialog_yes_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/dialog_message"
+        android:layout_below="@+id/dialog_message"
+        android:layout_marginLeft="35dp"
+        android:layout_marginTop="44dp"
+        android:onClick="onClickAccept"
+        android:text="@string/accept_request" />
+
+    <Button
+        android:id="@+id/dialog_no_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/dialog_yes_button"
+        android:layout_alignRight="@+id/dialog_message"
+        android:layout_marginRight="44dp"
+        android:onClick="onClickReject"
+        android:text="@string/reject_request" />
+
+</RelativeLayout>
